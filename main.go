@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 
+	"capomanpc/go-blog-api.git/models"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -11,8 +13,6 @@ func main() {
 	dbUser := "docker"
 	dbPassword := "docker"
 	dbDatabase := "sampledb"
-
-	// username:password@protocol(host:port)/dbname?param=value
 	dbConn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3300)/%s?parseTime=true", dbUser, dbPassword, dbDatabase)
 
 	db, err := sql.Open("mysql", dbConn)
@@ -21,9 +21,29 @@ func main() {
 	}
 	defer db.Close()
 
-	if err := db.Ping(); err != nil {
+	const sqlStr = `
+		select title, contents, username, nice
+		from articles;
+	`
+	rows, err := db.Query(sqlStr)
+	if err != nil {
 		fmt.Println(err)
-	} else {
-		fmt.Println("connect to DB")
+		return
 	}
+	defer rows.Close()
+
+	articleArray := make([]models.Article, 0)
+	for rows.Next() {
+		var article models.Article
+		err := rows.Scan(&article.Title, &article.Contents, &article.UserName, &article.NiceNum)
+
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			articleArray = append(articleArray, article)
+		}
+	}
+
+
+	fmt.Printf("%+v\n", articleArray)
 }
