@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/capomanpc/go-blog-api/models"
 	"github.com/gorilla/mux"
-	"github.com/yourname/reponame/models"
 )
 
 // GET /hello のハンドラ
