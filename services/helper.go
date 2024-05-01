@@ -3,15 +3,17 @@ package services
 import (
 	"database/sql"
 	"fmt"
+	"os"
 )
 
 var (
-	dbUser     = "docker"
-	dbPassword = "docker"
-	dbDatabase = "sampledb"
+	dbUser     = os.Getenv("DB_USER")
+	dbPassword = os.Getenv("DB_PASSWORD")
+	dbDatabase = os.Getenv("DB_NAME")
 	dbConn     = fmt.Sprintf("%s:%s@tcp(127.0.0.1:3300)/%s?parseTime=true", dbUser, dbPassword, dbDatabase)
 )
 
+// DBに接続するための関数
 func connectDB() (*sql.DB, error) {
 	db, err := sql.Open("mysql", dbConn)
 	if err != nil {
