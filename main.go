@@ -1,58 +1,26 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
+	"log"
+	"net/http"
 
+	"github.com/capomanpc/go-blog-api/handlers"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	dbUser := "docker"
-	dbPassword := "docker"
-	dbDatabase := "sampledb"
-	dbConn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3300)/%s?parseTime=true", dbUser, dbPassword, dbDatabase)
+	r := mux.NewRouter()
 
-	db, err := sql.Open("mysql", dbConn)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer db.Close()
+	r.HandleFunc("/hello", handlers.HelloHandler).Methods(http.MethodGet)
 
-	tx, err := db.Begin()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	r.HandleFunc("/article", handlers.PostArticleHandler).Methods(http.MethodPost)
+	r.HandleFunc("/article/list", handlers.ArticleListHandler).Methods(http.MethodGet)
+	r.HandleFunc("/article/{id:[0-9]+}", handlers.ArticleDetailHandler).Methods(http.MethodGet)
+	r.HandleFunc("/article/nice", handlers.PostNiceHandler).Methods(http.MethodPost)
 
-	article_id := 1
-	const sqlGetNice = `
-		select nice
-		from articles
-		where article_id = ?;
-	`
-	row := tx.QueryRow(sqlGetNice, article_id)
-	if err := row.Err(); err != nil {
-		fmt.Println(err)
-		tx.Rollback()
-		return
-	}
+	r.HandleFunc("/comment", handlers.PostCommentHandler).Methods(http.MethodPost)
 
-	var nicenum int
-	err = row.Scan(&nicenum)
-	if err != nil {
-		fmt.Println(err)
-		tx.Rollback()
-		return
-	}
-
-	const sqlUpdateNice = `update articles set nice = ? where article_id = ?`
-	_, err = tx.Exec(sqlUpdateNice, nicenum+1, article_id)
-	if err != nil {
-		fmt.Println(err)
-		tx.Rollback()
-		return
-	}
-
-	tx.Commit()
+	log.Println("server start at port 8080")
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
