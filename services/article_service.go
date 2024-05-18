@@ -6,7 +6,6 @@ import (
 )
 
 // ArticleDetailHandlerの処理をサービス化
-
 func GetArticleService(articleID int) (models.Article, error) {
 	db, err := connectDB()
 	if err != nil {
@@ -45,7 +44,7 @@ func PostArticleService(article models.Article) (models.Article, error) {
 	return newArticle, nil
 }
 
-// GetArticleListHandlerの処理をサービス化
+// ArticleListHandlerの処理をサービス化
 func GetArticleListService(page int) ([]models.Article, error) {
 	db, err := connectDB()
 	if err != nil {

@@ -30,7 +30,7 @@ func PostArticleHandler(w http.ResponseWriter, req *http.Request) {
 
 // GET /article/list のハンドラ
 func ArticleListHandler(w http.ResponseWriter, req *http.Request) {
-	queryMap := req.URL.Query()
+	queryMap := req.URL.Query() // URLのクエリをマップで取得、値は[]string
 
 	// クエリパラメータpageを取得
 	var page int
@@ -55,6 +55,7 @@ func ArticleListHandler(w http.ResponseWriter, req *http.Request) {
 
 // GET /article/{id} のハンドラ
 func ArticleDetailHandler(w http.ResponseWriter, req *http.Request) {
+	// URLの中に複数の変数が含まれる場合があるので変数名と値がマップに格納されている
 	articleID, err := strconv.Atoi(mux.Vars(req)["id"])
 	if err != nil {
 		http.Error(w, "Invalid query parameter", http.StatusBadRequest)
@@ -65,6 +66,7 @@ func ArticleDetailHandler(w http.ResponseWriter, req *http.Request) {
 	// 「変数articleIDが使われていない」というコンパイルエラーを回避
 	log.Println(articleID)
 
+	// modelsにあるArticle1変数を使用
 	article := models.Article1
 
 	json.NewEncoder(w).Encode(article)
