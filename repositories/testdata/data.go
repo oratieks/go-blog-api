@@ -23,11 +23,11 @@ var CommentTestData = []models.Comment{
 	models.Comment{
 		CommentID: 1,
 		ArticleID: 1,
-		Message:   "first comment",
+		Message:   "1st comment yeah",
 	},
 	models.Comment{
 		CommentID: 2,
 		ArticleID: 1,
-		Message:   "second comment",
+		Message:   "welcome",
 	},
 }

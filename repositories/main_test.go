@@ -14,7 +14,7 @@ var (
 	dbUser     = "docker"
 	dbPassword = "docker"
 	dbDatabase = "sampledb"
-	dbConn     = fmt.Sprintf("%s:%s@tcp(127.0.0.1:3300)/%s?parseTime=true", dbUser, dbPassword, dbDatabase)
+	dbConn     = fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?parseTime=true", dbUser, dbPassword, dbDatabase)
 )
 
 // DBに接続する処理
@@ -51,6 +51,8 @@ func teardown() {
 func TestMain(m *testing.M) {
 	err := setup() // テストの前処理
 	if err != nil {
+		fmt.Println("setup関数でエラーが発生しました")
+		fmt.Println(err)
 		os.Exit(1)
 	}
 
@@ -60,7 +62,7 @@ func TestMain(m *testing.M) {
 
 // mysqlクライアントからmysqlサーバーに接続してテストデータ作成のsqlを実行する
 func setupTestData() error {
-	cmd := exec.Command("mysql", "-h", "127.0.0.1", "-u", "docker", "sampledb", "--password=docker", "-P", "3300", "-e", "source ./testdata/setupDB.sql")
+	cmd := exec.Command("mysql", "-h", "127.0.0.1", "-u", "docker", "sampledb", "--password=docker", "-P", "3306", "-e", "source ./testdata/setupDB.sql")
 	err := cmd.Run()
 	if err != nil {
 		return err
@@ -70,7 +72,7 @@ func setupTestData() error {
 
 // mysqlクライアントからmysqlサーバーに接続してテストデータ削除のsqlを実行する
 func cleanupDB() error {
-	cmd := exec.Command("mysql", "-h", "127.0.0.1", "-u", "docker", "sampledb", "--password=docker", "-P", "3300", "-e", "source ./testdata/setupDB.sql")
+	cmd := exec.Command("mysql", "-h", "127.0.0.1", "-u", "docker", "sampledb", "--password=docker", "-P", "3306", "-e", "source ./testdata/clearnupDB.sql")
 	err := cmd.Run()
 	if err != nil {
 		return err

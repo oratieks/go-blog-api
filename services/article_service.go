@@ -5,76 +5,58 @@ import (
 	"github.com/capomanpc/go-blog-api/repositories"
 )
 
-// ArticleDetailHandlerの処理をサービス化
-func GetArticleService(articleID int) (models.Article, error) {
-	db, err := connectDB()
+// PostArticleHandlerで使うことを想定したサービス
+// 引数の情報をもとに新しい記事を作り、結果を返却
+func (s *MyAppService) PostArticleService(article models.Article) (models.Article, error) {
+	newArticle, err := repositories.InsertArticle(s.db, article)
 	if err != nil {
 		return models.Article{}, err
 	}
-	defer db.Close()
-
-	article, err := repositories.SelectArticleDetail(db, articleID)
-	if err != nil {
-		return models.Article{}, err
-	}
-
-	commentList, err := repositories.SelectCommentList(db, articleID)
-	if err != nil {
-		return models.Article{}, err
-	}
-
-	// '...'はスライスの展開
-	article.CommentList = append(article.CommentList, commentList...)
-	return article, nil
-}
-
-// PostArticleHandlerの処理をサービス化
-func PostArticleService(article models.Article) (models.Article, error) {
-	db, err := connectDB()
-	if err != nil {
-		// 構造体は値型なので初期値である空の構造体を返す
-		return models.Article{}, err
-	}
-
-	newArticle, err := repositories.InsertArticle(db, article)
-	if err != nil {
-		return models.Article{}, err
-	}
-
 	return newArticle, nil
 }
 
-// ArticleListHandlerの処理をサービス化
-func GetArticleListService(page int) ([]models.Article, error) {
-	db, err := connectDB()
+// ArticleListHandlerで使うことを想定したサービス
+// 指定pageの記事一覧を返却
+func (s *MyAppService) GetArticleListService(page int) ([]models.Article, error) {
+	articleList, err := repositories.SelectArticleList(s.db, page)
 	if err != nil {
-		// スライスは参照型なので初期値であるnilを返す
 		return nil, err
 	}
-	defer db.Close()
 
-	articleList, err := repositories.SelectArticleList(db, page)
-	if err != nil {
-		return nil, err
-	}
 	return articleList, nil
 }
 
-// PostNiceHandlerの処理をサービス化
-func PostNiceService(article models.Article) (models.Article, error) {
-	db, err := connectDB()
+// ArticleDetailHandlerで使うことを想定したサービス
+// 指定IDの記事情報を返却
+func (s *MyAppService) GetArticleService(articleID int) (models.Article, error) {
+	article, err := repositories.SelectArticleDetail(s.db, articleID)
 	if err != nil {
 		return models.Article{}, err
 	}
-	defer db.Close()
-
-	err = repositories.UpdateNiceNum(db, article.ID)
+	commentList, err := repositories.SelectCommentList(s.db, articleID)
 	if err != nil {
 		return models.Article{}, err
 	}
 
-	newArticle := article
-	newArticle.NiceNum = newArticle.NiceNum + 1
+	article.CommentList = append(article.CommentList, commentList...)
 
-	return newArticle, nil
+	return article, nil
+}
+
+// PostNiceHandlerで使うことを想定したサービス
+// 指定IDの記事のいいね数を+1して、結果を返却
+func (s *MyAppService) PostNiceService(article models.Article) (models.Article, error) {
+	err := repositories.UpdateNiceNum(s.db, article.ID)
+	if err != nil {
+		return models.Article{}, err
+	}
+
+	return models.Article{
+		ID:        article.ID,
+		Title:     article.Title,
+		Contents:  article.Contents,
+		UserName:  article.UserName,
+		NiceNum:   article.NiceNum + 1,
+		CreatedAt: article.CreatedAt,
+	}, nil
 }
