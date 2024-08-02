@@ -13,10 +13,10 @@ import (
 
 // MyAppService構造体の内部にはdb.sql型の変数がある
 type MyAppController struct {
-	service *services.MyAppService
+	service services.MyAppService
 }
 
-func NewMyAppController(s *services.MyAppService) *MyAppController {
+func NewMyAppController(s services.MyAppService) *MyAppController {
 	return &MyAppController{service: s}
 }
 
