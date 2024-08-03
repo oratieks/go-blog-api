@@ -3,56 +3,35 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
 
+	"github.com/capomanpc/go-blog-api/api"
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func main() {
-	dbUser := "docker"
-	dbPassword := "docker"
-	dbDatabase := "sampledb"
-	dbConn := fmt.Sprintf("%s:%s@tcp(127.0.0.1:3300)/%s?parseTime=true", dbUser, dbPassword, dbDatabase)
+var (
+	dbUser     = os.Getenv("DB_USER")
+	dbPassword = os.Getenv("DB_PASSWORD")
+	dbDatabase = os.Getenv("DB_NAME")
+	dbConn     = fmt.Sprintf("%s:%s@tcp(127.0.0.1:3306)/%s?parseTime=true", dbUser, dbPassword, dbDatabase)
+)
 
+func main() {
+	// 最初にDBに接続することでプログラム全体でDB接続を共有する
 	db, err := sql.Open("mysql", dbConn)
 	if err != nil {
-		fmt.Println(err)
-	}
-	defer db.Close()
-
-	tx, err := db.Begin()
-	if err != nil {
-		fmt.Println(err)
+		log.Println(dbConn)
+		log.Println("failed to connect database")
 		return
 	}
 
-	article_id := 1
-	const sqlGetNice = `
-		select nice
-		from articles
-		where article_id = ?;
-	`
-	row := tx.QueryRow(sqlGetNice, article_id)
-	if err := row.Err(); err != nil {
-		fmt.Println(err)
-		tx.Rollback()
-		return
-	}
+	r := api.NewRouter(db)
 
-	var nicenum int
-	err = row.Scan(&nicenum)
-	if err != nil {
-		fmt.Println(err)
-		tx.Rollback()
-		return
-	}
-
-	const sqlUpdateNice = `update articles set nice = ? where article_id = ?`
-	_, err = tx.Exec(sqlUpdateNice, nicenum+1, article_id)
-	if err != nil {
-		fmt.Println(err)
-		tx.Rollback()
-		return
-	}
-
-	tx.Commit()
+	log.Println("server start at port 8080")
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
+
+// .Methods(http.MethodPost)はPOSTリクエストのみを受け付けるように指定している
+// "{id:[0-9]+}"は"{id}"でもok、正規表現を使いたい場合':'の後に正規表現を記述する

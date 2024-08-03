@@ -9,11 +9,11 @@ services:
     environment:
         MYSQL_ROOT_PASSWORD: ${ROOTPASS} # .envから変数を参照
         MYSQL_DATABASE: ${DATABASE}
-        MYSQL_USER: ${USERNAME}
-        MYSQL_PASSWORD: ${USERPASS}
+        MYSQL_USER: ${MYSQLUSER}
+        MYSQL_PASSWORD: ${MYSQLPASS}
         TZ: 'Asia/Tokyo'
     ports: 
-        - 3300:3306
+        - 3306:3306
     volumes:
         - db-volume:/var/lib/mysql # MySQLのデフォルトのデータディレクトリ
 

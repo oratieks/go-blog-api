@@ -18,3 +18,16 @@ var ArticleTestData = []models.Article{
 		NiceNum:  4,
 	},
 }
+
+var CommentTestData = []models.Comment{
+	models.Comment{
+		CommentID: 1,
+		ArticleID: 1,
+		Message:   "1st comment yeah",
+	},
+	models.Comment{
+		CommentID: 2,
+		ArticleID: 1,
+		Message:   "welcome",
+	},
+}
