@@ -3,7 +3,7 @@ package apperrors
 type MyAppError struct {
 	ErrCode
 	Message string
-	Err     error // エラーチェーンのためのコード
+	Err     error `json:"-"` // エラーチェーンのため, JSONには出力しない
 }
 
 func (myErr *MyAppError) Error() string {
