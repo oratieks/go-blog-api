@@ -7,9 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/capomanpc/go-blog-api/controllers"
-	"github.com/capomanpc/go-blog-api/routers"
-	"github.com/capomanpc/go-blog-api/services"
+	"github.com/capomanpc/go-blog-api/api"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -29,13 +27,7 @@ func main() {
 		return
 	}
 
-	// service層でdb変数を使用するのでservice層のMyAppService構造体にdb変数を渡して共有
-	ser := services.NewMyAppService(db)
-
-	// controller層
-	con := controllers.NewMyAppController(ser)
-
-	r := routers.NewRouter(con)
+	r := api.NewRouter(db)
 
 	log.Println("server start at port 8080")
 	log.Fatal(http.ListenAndServe(":8080", r))
