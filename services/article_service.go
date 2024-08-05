@@ -15,6 +15,8 @@ func (s *MyAppService) PostArticleService(article models.Article) (models.Articl
 	newArticle, err := repositories.InsertArticle(s.db, article)
 	if err != nil {
 		// ErrCode型のInsertDataFailed定数のWrapメソッドを使用してラップされたエラーを返す
+		// InsertDataFailedの部分は通常ErrCode型の変数だが、今回の場合はErrCode型の定数を使用している
+		// 普段は変数だけど今回は定数が使用されている
 		err = apperrors.InsertDataFailed.Wrap(err, "fail to record data")
 		return models.Article{}, err
 	}

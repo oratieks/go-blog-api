@@ -7,14 +7,18 @@ import (
 )
 
 // エラーが発生したときのレスポンス処理をここで一括で行う
+// 引数はerror型であるため渡された変数がMyAppError型であったとしてもerrorインターフェースとして見られる
+// 実際にMyAppError型であってもerror型として扱われるため、errors.Asを使ってMyAppError型に変換する
 func ErrorHandler(w http.ResponseWriter, req *http.Request, err error) {
+	// コピー先のMyAppError型の変数を宣言
+	// error型は通常ポインタで扱われる（エラーハンドリングのnilチェックなどが容易）
 	var appErr *MyAppError
-	// 受け取ったerrをMyAppError型に入れ替える
+	// errがMyAppError型であった場合、appErrに中身をコピーする
+	// このような操作によりerrorインターフェースとして扱われていたMyAppError型をMyAppError型として扱えるようになる
 	if !errors.As(err, &appErr) {
-		// MyAppError型に変換できない場合は想定しないエラーが発生したということなので、
-		// 手動でappErrに代入
+		// MyAppError型に変換できない場合は想定しないエラーが発生したということなので手動でappErrに代入
 		appErr = &MyAppError{
-			ErrCode: Unknown,
+			ErrCode: Unknown, // 未知のエラー
 			Message: "internal process failed",
 			Err:     err,
 		}
@@ -22,6 +26,7 @@ func ErrorHandler(w http.ResponseWriter, req *http.Request, err error) {
 
 	var statusCode int
 
+	// appErrのErrCodeによってステータスコードを決定
 	switch appErr.ErrCode {
 	case NAData, BadParam:
 		statusCode = http.StatusNotFound
@@ -31,6 +36,7 @@ func ErrorHandler(w http.ResponseWriter, req *http.Request, err error) {
 		statusCode = http.StatusInternalServerError
 	}
 
+	// ステータスコードとエラーメッセージをレスポンスとして返す
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(appErr)
 }

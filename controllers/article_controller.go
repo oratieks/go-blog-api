@@ -26,6 +26,7 @@ func (c *ArticleController) HelloHandler(w http.ResponseWriter, req *http.Reques
 }
 
 // POST /article のハンドラ
+// 呼び出し元ではArticleController型のインスタンスcに必ず関連付けれられてPostArticleHandlerが呼び出される
 func (c *ArticleController) PostArticleHandler(w http.ResponseWriter, req *http.Request) {
 	var reqArticle models.Article
 	if err := json.NewDecoder(req.Body).Decode(&reqArticle); err != nil {
@@ -35,6 +36,7 @@ func (c *ArticleController) PostArticleHandler(w http.ResponseWriter, req *http.
 		return
 	}
 
+	// c(ArticleController型)のserviceフィールドのMyAppService型のメソッドがPostArticleService
 	article, err := c.service.PostArticleService(reqArticle)
 	if err != nil {
 		apperrors.ErrorHandler(w, req, err)
