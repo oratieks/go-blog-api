@@ -52,6 +52,7 @@ func (c *ArticleController) ArticleListHandler(w http.ResponseWriter, req *http.
 
 	// クエリパラメータpageを取得
 	var page int
+	// value, bool pageキーが存在する且つ中身が0ではない
 	if p, ok := queryMap["page"]; ok && len(p) > 0 {
 		var err error
 		page, err = strconv.Atoi(p[0])
