@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gorilla/mux"
 )
 
 func TestArticleListHandler(t *testing.T) {
@@ -14,22 +16,47 @@ func TestArticleListHandler(t *testing.T) {
 		resultCode int
 	}{
 		{name: "number query", query: "1", resultCode: http.StatusOK},
-		{name: "alphabet query", query: "aaa", resultCode: http.StatusNotFound},
+		{name: "alphabet query", query: "aaa", resultCode: http.StatusBadRequest},
 	}
 
-	// index, value
 	for _, tt := range tests {
-		// tt.nameはサブテストの名前で第二引数はテスト関数
 		t.Run(tt.name, func(t *testing.T) {
 			url := fmt.Sprintf("http://localhost:8080/article/list?page=%s", tt.query)
-			// ハンドラの第二引数に渡すhttp.Request型の変数を作成（リクエストを作成）
-			// 第三引数のnilはPostのときに渡したいデータを指定する
 			req := httptest.NewRequest(http.MethodGet, url, nil)
 
-			// http.ResponseRecorder型を生成
 			res := httptest.NewRecorder()
 
 			aCon.ArticleListHandler(res, req)
+
+			if res.Code != tt.resultCode {
+				t.Errorf("unexpected StatusCode: want %d but %d\n", tt.resultCode, res.Code)
+			}
+		})
+	}
+}
+
+func TestArticleDetailHandler(t *testing.T) {
+	var tests = []struct {
+		name       string
+		articleID  string
+		resultCode int
+	}{
+		{name: "number pathparam", articleID: "1", resultCode: http.StatusOK},
+		{name: "alphabet pathparam", articleID: "aaa", resultCode: http.StatusNotFound},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			url := fmt.Sprintf("http://localhost:8080/article/%s", tt.articleID)
+			req := httptest.NewRequest(http.MethodGet, url, nil)
+
+			res := httptest.NewRecorder()
+
+			// ArticleDetailHandler内部で使用されているmux.Vars関数はgorilla/muxのルータ経由で受け取ったリクエストしかうまく動作しない
+			// そのためルータを宣言してハンドラ関数を登録し、そのルータに対してServeHTTPを呼び出している
+			r := mux.NewRouter()
+			r.HandleFunc("/article/{id:[0-9]+}", aCon.ArticleDetailHandler).Methods(http.MethodGet)
+			r.ServeHTTP(res, req)
 
 			if res.Code != tt.resultCode {
 				t.Errorf("unexpected StatusCode: want %d but %d\n", tt.resultCode, res.Code)
