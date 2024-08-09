@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
+	"github.com/capomanpc/go-blog-api/api/middlewares"
 	"github.com/capomanpc/go-blog-api/controllers"
 	"github.com/capomanpc/go-blog-api/services"
 	"github.com/gorilla/mux"
@@ -24,6 +25,9 @@ func NewRouter(db *sql.DB) *mux.Router {
 	r.HandleFunc("/article/nice", aCon.PostNiceHandler).Methods(http.MethodPost)
 
 	r.HandleFunc("/comment", cCon.PostCommentHandler).Methods(http.MethodPost)
+
+	// ミドルウェアを一括で導入
+	r.Use(middlewares.LoggingMiddleware)
 
 	return r
 }
