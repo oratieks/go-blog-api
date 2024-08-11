@@ -3,6 +3,7 @@ package services
 import (
 	"database/sql"
 	"errors"
+	"sync"
 
 	"github.com/capomanpc/go-blog-api/apperrors"
 	"github.com/capomanpc/go-blog-api/models"
@@ -43,21 +44,46 @@ func (s *MyAppService) GetArticleListService(page int) ([]models.Article, error)
 // ArticleDetailHandlerで使うことを想定したサービス
 // 指定IDの記事情報を返却
 func (s *MyAppService) GetArticleService(articleID int) (models.Article, error) {
-	article, err := repositories.SelectArticleDetail(s.db, articleID)
-	if err != nil {
-		// 出力が0行だった場合はsql.ErrNoRowsが返されるのでerrors.Is関数で判定
-		// Trueだった場合は独自エラー型であるNADataでラップして返す
-		if errors.Is(err, sql.ErrNoRows) {
-			err = apperrors.NAData.Wrap(err, "no data")
+	// ゴルーチン内部で宣言された変数は、そのゴルーチン内でのみ有効なため、値を受け取る変数を定義している
+	var article models.Article
+	var commentList []models.Comment
+	var articleGetErr, commentGetErr error // 非同期で実行されるのでエラー変数も二つ作る必要がある
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	var amu sync.Mutex
+	var cmu sync.Mutex
+
+	go func(db *sql.DB, articleID int) {
+		defer wg.Done()
+		newArticle, err := repositories.SelectArticleDetail(db, articleID)
+		amu.Lock() // 異なるインスタンスを使用する
+		article, articleGetErr = newArticle, err
+		amu.Unlock()
+	}(s.db, articleID) // 引数を渡している
+
+	go func(db *sql.DB, articleID int) {
+		defer wg.Done()
+		newCommentList, err := repositories.SelectCommentList(db, articleID)
+		cmu.Lock() // 異なるインスタンスを使用する
+		commentList, commentGetErr = newCommentList, err
+		cmu.Unlock()
+	}(s.db, articleID)
+
+	wg.Wait()
+
+	if articleGetErr != nil {
+		if errors.Is(articleGetErr, sql.ErrNoRows) {
+			err := apperrors.NAData.Wrap(articleGetErr, "no data")
 			return models.Article{}, err
 		}
-		// データが取得できなかった場合は独自エラー型のGetDataFailedでラップして返す
-		err = apperrors.GetDataFailed.Wrap(err, "fail to get data")
+		err := apperrors.GetDataFailed.Wrap(articleGetErr, "fail to get data")
 		return models.Article{}, err
 	}
-	commentList, err := repositories.SelectCommentList(s.db, articleID)
-	if err != nil {
-		err = apperrors.GetDataFailed.Wrap(err, "fail to get data")
+
+	if commentGetErr != nil {
+		err := apperrors.GetDataFailed.Wrap(commentGetErr, "fail to get data")
 		return models.Article{}, err
 	}
 
