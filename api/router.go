@@ -27,6 +27,7 @@ func NewRouter(db *sql.DB) *mux.Router {
 	r.HandleFunc("/comment", cCon.PostCommentHandler).Methods(http.MethodPost)
 
 	// ミドルウェアを一括で導入
+	// 引数の型はMiddlewareFunc型で定義はtype MiddlewareFunc func(http.Handler) http.Handler
 	r.Use(middlewares.LoggingMiddleware)
 
 	return r
